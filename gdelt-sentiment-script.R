@@ -234,19 +234,28 @@ places <- c("Aberdeen",
 
 # HHTP 429 is too many requests
 
+places[[ 15]] <- 'Bath+Tourism'         # Narrow Down Bath
+places[[ 25]] <- 'Boston+Place'         # Narrow Down Boston
+places[[ 63]] <- 'Derby+Place'          # Narrow Down Derby
+places[[118]] <- 'Lincoln+Place'        # Narrow Down Lincoln
+places[[166]] <- 'Berkshire'            # 'Reading' Changed To Berkshire
+places[[218]] <- 'York+United+Kingdom'  # Narrow Down York
+
 ## -- Iterative Data Request -- ------------------------------------------------
 data_frames <- list()
 
 for (i in 1:length(places)) {
   tryCatch({
     
-    #request <- paste0("https://api.gdeltproject.org/api/v2/doc/doc?query=",
-    #                  places[[i]], "&mode=ToneChart&timespan=5y&FORMAT=csv")
-    
     request <- paste0("https://api.gdeltproject.org/api/v2/doc/doc?query=",
-                      places[[i]], "&sourcecountry=UK&contentmode=ToneChart&timespan=5y&FORMAT=csv")
+                      places[[i]],
+                      "&mode=ToneChart",
+                      "&format=csv",
+                      "&timespan=5y")
     
-    # mode vs. contentmode ???
+    # mode or content mode?
+    # theme:TOURISM and sourcecountry:UK Removed For Now
+    # Query A Place, 5 Years, Tone Chart CSV
     
     data_frames[[i]] <- read.csv(request, stringsAsFactors = FALSE) %>%
       mutate(Place = places[[i]]) %>% as.data.frame()
@@ -254,7 +263,6 @@ for (i in 1:length(places)) {
   }, error = function(e) {
     
     message(paste("Failed to read CSV")) # Error message
-    # data_frames[[i]] <- data.frame(A = 0, B = 0, Place = places[[i]])
     
   })
 }
@@ -266,7 +274,7 @@ for (i in 1:length(places)) {
 # Error 429 is too many API requests
 
 ## -- Some Other Shenanigans -- ------------------------------------------------
-data_frames[[23]] <- data.frame(Label = 0, Count = 0, Place = places[23]) # Odd NULL Case
+data_frames[[23 ]] <- data.frame(Label = 0, Count = 0, Place = places[23 ]) # Odd NULL Case
 
 data_frames[[7  ]] <- data.frame(Label = 0, Count = 0, Place = places[7  ])
 data_frames[[13 ]] <- data.frame(Label = 0, Count = 0, Place = places[13 ])
@@ -287,5 +295,12 @@ data_frames <- data_frames %>% group_by(Place) %>%
   mutate(Awareness = sum(Count)) %>%
   select(-Label, -Count) %>%
   distinct()
+
+data_frames[ 15, 1] <- "Bath"
+data_frames[ 25, 1] <- "Boston"
+data_frames[ 63, 1] <- "Derby"
+data_frames[118, 1] <- "Lincoln"
+data_frames[166, 1] <- "Reading"
+data_frames[218, 1] <- "York"
 
 write.csv(data_frames, "ttwa-sentiment-awareness.csv")
